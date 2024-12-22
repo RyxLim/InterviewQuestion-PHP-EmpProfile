@@ -5,7 +5,7 @@
         "build": "vite build"
     },
     "devDependencies": {
-        "axios": "^1.1.2",
+        "axios": "^1.7.9",
         "laravel-vite-plugin": "^0.7.2",
         "lodash": "^4.17.19",
         "postcss": "^8.1.14",
@@ -15,7 +15,9 @@
         "@popperjs/core": "^2.11.8",
         "@vitejs/plugin-react": "^4.3.4",
         "bootstrap": "^5.3.3",
+        "font-awesome": "^4.7.0",
         "react": "^19.0.0",
-        "react-dom": "^19.0.0"
+        "react-dom": "^19.0.0",
+        "sweetalert2": "^11.15.2"
     }
 }
