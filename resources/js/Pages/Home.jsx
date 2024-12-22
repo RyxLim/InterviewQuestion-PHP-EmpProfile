@@ -193,7 +193,7 @@ export default function Home() {
 
                 Swal.fire({
                     icon: "success",
-                    title: "Employee Added!",
+                    title: "Employee Updated!",
                     text: "Employee details has been updated successfully.",
                     confirmButtonText: "OK",
                 });

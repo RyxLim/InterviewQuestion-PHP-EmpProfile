@@ -5,7 +5,7 @@ export default function Modal({ title, children, isOpen, handleSave, handleClose
 
     return (
         <div className="modal fade show" style={{ display: "block" }} tabIndex="-1">
-        <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content">
                 <div className="modal-header">
                     <h5 className="modal-title">{title}</h5>
