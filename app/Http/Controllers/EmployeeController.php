@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -39,6 +41,8 @@ class EmployeeController extends Controller
                 'message' => 'Error reading employees data'
             ], 500);
         }
+
+        // $employees = Employee::all();
 
         return response()->json([
             'message' => 'Employees retrieved successfully',
@@ -85,6 +89,9 @@ class EmployeeController extends Controller
 
         Storage::put($filePath, json_encode($existingData, JSON_PRETTY_PRINT));
 
+        // Insert into DB as well
+        Employee::create($validatedData);
+
         return response()->json([
             'message' => 'Employee created successfully',
             'data' => $validatedData
@@ -111,49 +118,65 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $filePath = storage_path('app/exports/employees.csv');
+        try {
+            $filePath = storage_path('app/exports/employees.csv');
 
-        if (!file_exists($filePath)) {
-            return response()->json([
-                'message' => 'No employees found'
-            ], 404);
-        }
-
-        // Validate the incoming request
-        $validatedData = $this->validateData($request);
-
-        $fileContent = file_get_contents($filePath);
-        $employees = json_decode($fileContent, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return response()->json([
-                'message' => 'Error decoding employees data'
-            ], 500);
-        }
-
-        // Find the emp to update
-        $employeeIndex = null;
-        foreach ($employees as $index => $employee) {
-            if ($employee['id'] == $id) {
-                $employeeIndex = $index;
-                break;
+            if (!file_exists($filePath)) {
+                return response()->json([
+                    'message' => 'No employees found'
+                ], 404);
             }
-        }
 
-        if ($employeeIndex === null) {
+            // Validate the incoming request
+            $validatedData = $this->validateData($request);
+
+            $fileContent = file_get_contents($filePath);
+            $employees = json_decode($fileContent, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return response()->json([
+                    'message' => 'Error decoding employees data'
+                ], 500);
+            }
+
+            // Find the emp to update
+            $employeeIndex = null;
+            foreach ($employees as $index => $employee) {
+                if ($employee['id'] == $id) {
+                    $employeeIndex = $index;
+                    break;
+                }
+            }
+
+            if ($employeeIndex === null) {
+                return response()->json([
+                    'message' => 'Employee not found'
+                ], 404);
+            }
+
+            $employees[$employeeIndex] = array_merge($employees[$employeeIndex], $validatedData);
+
+            file_put_contents($filePath, json_encode(array_values($employees), JSON_PRETTY_PRINT));
+
+            // DB EDIT
+            // $employee = Employee::findOrFail($id);
+
+            // $validatedData = $this->validateData($request);
+            
+            // $employee->update($validatedData);
+
+            return response()->json([
+                'message' => 'Employee updated successfully'
+            ], 200);
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'message' => 'Employee not found'
             ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message'=> 'An error occurred while updating employee'
+            ],500);
         }
-
-        $employees[$employeeIndex] = array_merge($employees[$employeeIndex], $validatedData);
-
-        file_put_contents($filePath, json_encode(array_values($employees), JSON_PRETTY_PRINT));
-
-        return response()->json([
-            'message' => 'Employee updated successfully',
-            'data' => $validatedData
-        ], 200);
     }
 
     /**
@@ -164,44 +187,58 @@ class EmployeeController extends Controller
      */
     public function destroy($id)
     {
-        $filePath = storage_path('app/exports/employees.csv');
+        try{
+            $filePath = storage_path('app/exports/employees.csv');
 
-        if (!file_exists($filePath)) {
+            if (!file_exists($filePath)) {
+                return response()->json([
+                    'message' => 'No employees found'
+                ], 404);
+            }
+
+            $fileContent = file_get_contents($filePath);
+
+            $employees = json_decode($fileContent, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return response()->json([
+                    'message' => 'Error decoding employees data'
+                ], 500);
+            }
+
+            $filteredEmployees = array_filter($employees, function ($employee) use ($id) {
+                return $employee['id'] != $id;
+            });
+
+            if (count($filteredEmployees) === count($employees)) {
+                return response()->json([
+                    'message' => 'Employee not found'
+                ], 404);
+            }
+
+            // DB Delete
+            // $employee = Employee::findOrFail($id);
+            // $employee->delete();
+
+            file_put_contents($filePath, json_encode(array_values($filteredEmployees), JSON_PRETTY_PRINT));
+
+            return response()->json(['message' => 'Employee deleted successfully.'], 200);
+        } catch (ModelNotFoundException $e) {
             return response()->json([
-                'message' => 'No employees found'
+                'message'=> 'Employee not found'
             ], 404);
-        }
-
-        $fileContent = file_get_contents($filePath);
-
-        $employees = json_decode($fileContent, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Error decoding employees data'
-            ], 500);
+                'message'=> 'An error occurred while deleting employee'
+            ],500);
         }
-
-        $filteredEmployees = array_filter($employees, function ($employee) use ($id) {
-            return $employee['id'] != $id;
-        });
-
-        if (count($filteredEmployees) === count($employees)) {
-            return response()->json([
-                'message' => 'Employee not found'
-            ], 404);
-        }
-
-        file_put_contents($filePath, json_encode(array_values($filteredEmployees), JSON_PRETTY_PRINT));
-
-        return response()->json(['message' => 'Employee deleted successfully.'], 200);
     }
 
     private function validateData($request)
     {
         return $request->validate([
             'name' => 'required|string|max:255',
-            'myKad' => 'required|string|max:50',
+            'myKad' => 'required|string|max:50|unique:employees,myKad',
             'gender' => 'required|in:Male,Female,Other',
             'maritalStatus' => 'required|in:Single,Married,Divorced,Widowed',
             'phone' => 'required|string|max:15',

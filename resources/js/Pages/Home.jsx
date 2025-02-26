@@ -61,7 +61,7 @@ export default function Home() {
         });
 
         setFilteredEmployees(filtereed);
-    }, [searchQuery, employees]);
+    }, [searchQuery]);
 
     const handleSearch = (e) => {
         setSearchQuery(e.target.value);

@@ -18,13 +18,13 @@ return new class extends Migration
             $table->string('name');
             $table->string('myKad')->unique();
             $table->enum('gender', ['male', 'female', 'other']);
-            $table->string('marital_status');
+            $table->string('maritalStatus');
             $table->string('phone');
             $table->string('email')->unique();
             $table->text('address');
-            $table->date('date_of_birth');
+            $table->date('dateOfBirth');
             $table->string('nationality');
-            $table->date('hire_date');
+            $table->date('hireDate');
             $table->string('department');
             $table->timestamps();
         });

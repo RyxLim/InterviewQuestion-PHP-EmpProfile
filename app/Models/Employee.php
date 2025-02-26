@@ -13,13 +13,13 @@ class Employee extends Model
         'name',
         'myKad',
         'gender',
-        'marital_status',
+        'maritalStatus',
         'phone',
         'email',
         'address',
-        'date_of_birth',
+        'dateOfBirth',
         'nationality',
-        'hire_date',
+        'hireDate',
         'department',
     ];
 }
